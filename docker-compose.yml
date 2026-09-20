@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27018:27017"
+    volumes:
+      - journal_mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+    environment:
+      DATABASE_URL: mongodb://mongo:27017/journal
+      JWT_ACCESS_SECRET: dev-access-secret-change-me
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-me
+      MT5_SERVICE_TOKEN: dev-mt5-service-token
+      PORT: 3000
+      CORS_ORIGIN: "*"
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mt5-worker:
+    build:
+      context: ./mt5-worker
+    environment:
+      API_BASE_URL: http://api:3000
+      MT5_API_TOKEN: dev-mt5-service-token
+      MT5_PROVIDER: mock
+      POLL_SECONDS: "5"
+    depends_on:
+      - api
+
+volumes:
+  journal_mongo:

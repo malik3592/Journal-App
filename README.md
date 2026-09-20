@@ -1,17 +1,40 @@
-# journal
+# Journal Trading Journal
 
-A new Flutter project.
+Flutter journal for iOS and Android, a NestJS API, and a read-only MT5 worker.
 
-## Getting Started
+```text
+Flutter  →  NestJS  →  MongoDB (Mongoose)
+                ↑
+         Python MT5 worker (mock on Mac, live on Windows)
+```
 
-This project is a starting point for a Flutter application.
+The mobile app never talks to MT5 and never stores a broker password. The worker never places trades.
 
-A few resources to get you started if this is your first Flutter project:
+## Quick start (this Mac)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+docker compose up --build
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+API: `http://127.0.0.1:3000`
+
+Local MongoDB (this Mac already running `mongod`):
+
+```text
+mongodb://127.0.0.1:27017/journal
+```
+
+Docker Compose Mongo is published at `localhost:27018` so it does not collide with that local `mongod`. The API container talks to Mongo on the internal Docker network.
+
+```bash
+cd mobile
+flutter run
+```
+
+1. Register an account.
+2. Choose **Connect MT5** and keep demo login `12345678` / `ICMarketsSC-Demo`.
+3. The mock worker imports sample trades. Complete a journal, or add a manual trade from `+`.
+
+## Windows live MT5
+
+See [mt5-worker/README.md](mt5-worker/README.md). Run `windows/run.ps1` next to a logged-in MetaTrader 5 terminal.

@@ -1,0 +1,5 @@
+requests==2.32.3
+pydantic==2.11.7
+python-dotenv==1.1.1
+MetaTrader5==5.0.4874
+pyinstaller==6.15.0

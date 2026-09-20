@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String               @id @default(uuid())
+  email              String               @unique
+  displayName        String               @map("display_name")
+  passwordHash       String?              @map("password_hash")
+  timezone           String               @default("Asia/Karachi")
+  currency           String               @default("USD")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  refreshTokens      RefreshToken[]
+  accounts           TradingAccount[]
+  strategies         Strategy[]
+  tags               Tag[]
+  checklistTemplates ChecklistTemplate[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @map("token_hash")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model TradingAccount {
+  id              String         @id @default(uuid())
+  userId          String         @map("user_id")
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String         @default("Trading Account")
+  brokerName      String         @map("broker_name")
+  mt5Login        String?        @map("mt5_login")
+  mt5Server       String?        @map("mt5_server")
+  accountType     String         @default("demo") @map("account_type")
+  currency        String         @default("USD")
+  connectionType  String         @default("MT5") @map("connection_type")
+  leverage        Int?
+  balance         Decimal        @default(0) @db.Decimal(18, 2)
+  equity          Decimal        @default(0) @db.Decimal(18, 2)
+  lastSyncAt      DateTime?      @map("last_sync_at")
+  syncStatus      String         @default("Disconnected") @map("sync_status")
+  syncRequestedAt DateTime?      @map("sync_requested_at")
+  lastSyncFrom    DateTime?      @map("last_sync_from")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  orders          Mt5Order[]
+  deals           Mt5Deal[]
+  trades          JournalTrade[]
+
+  @@unique([userId, mt5Login, mt5Server])
+  @@index([mt5Login, mt5Server])
+  @@map("trading_accounts")
+}
+
+model Mt5Order {
+  id            String         @id @default(uuid())
+  accountId     String         @map("account_id")
+  account       TradingAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  mt5OrderId    String         @map("mt5_order_id")
+  mt5PositionId String?        @map("mt5_position_id")
+  symbol        String
+  orderType     String         @map("order_type")
+  volume        Decimal        @db.Decimal(18, 8)
+  price         Decimal        @db.Decimal(18, 8)
+  sl            Decimal?       @db.Decimal(18, 8)
+  tp            Decimal?       @db.Decimal(18, 8)
+  state         String
+  orderTime     DateTime       @map("order_time")
+  rawPayload    Json           @map("raw_payload")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@unique([accountId, mt5OrderId])
+  @@map("mt5_orders")
+}
+
+model Mt5Deal {
+  id            String         @id @default(uuid())
+  accountId     String         @map("account_id")
+  account       TradingAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  mt5DealId     String         @map("mt5_deal_id")
+  mt5OrderId    String?        @map("mt5_order_id")
+  mt5PositionId String?        @map("mt5_position_id")
+  symbol        String
+  dealType      String         @map("deal_type")
+  entryType     String         @map("entry_type")
+  volume        Decimal        @db.Decimal(18, 8)
+  price         Decimal        @db.Decimal(18, 8)
+  profit        Decimal        @default(0) @db.Decimal(18, 2)
+  commission    Decimal        @default(0) @db.Decimal(18, 2)
+  swap          Decimal        @default(0) @db.Decimal(18, 2)
+  fee           Decimal        @default(0) @db.Decimal(18, 2)
+  magic         Int            @default(0)
+  comment       String         @default("")
+  executionTime DateTime       @map("execution_time")
+  rawPayload    Json           @map("raw_payload")
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  @@unique([accountId, mt5DealId])
+  @@map("mt5_deals")
+}
+
+model JournalTrade {
+  id                 String         @id @default(uuid())
+  accountId          String         @map("account_id")
+  account            TradingAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  positionId         String?        @map("position_id")
+  source             String         @default("MT5")
+  symbol             String
+  direction          String
+  volume             Decimal        @db.Decimal(18, 8)
+  entryPrice         Decimal        @map("entry_price") @db.Decimal(18, 8)
+  exitPrice          Decimal?       @map("exit_price") @db.Decimal(18, 8)
+  stopLoss           Decimal?       @map("stop_loss") @db.Decimal(18, 8)
+  takeProfit         Decimal?       @map("take_profit") @db.Decimal(18, 8)
+  grossProfit        Decimal        @default(0) @map("gross_profit") @db.Decimal(18, 2)
+  commission         Decimal        @default(0) @db.Decimal(18, 2)
+  swap               Decimal        @default(0) @db.Decimal(18, 2)
+  fee                Decimal        @default(0) @db.Decimal(18, 2)
+  netProfit          Decimal        @default(0) @map("net_profit") @db.Decimal(18, 2)
+  riskAmount         Decimal?       @map("risk_amount") @db.Decimal(18, 2)
+  realizedR          Decimal?       @map("realized_r") @db.Decimal(18, 4)
+  durationSeconds    Int?           @map("duration_seconds")
+  openedAt           DateTime       @map("opened_at")
+  closedAt           DateTime?      @map("closed_at")
+  session            String?
+  strategyId         String?        @map("strategy_id")
+  strategy           Strategy?      @relation(fields: [strategyId], references: [id])
+  marketConditions   Json?          @map("market_conditions")
+  primaryEmotion     String?        @map("primary_emotion")
+  secondaryEmotions  Json?          @map("secondary_emotions")
+  confidence         Int?
+  rating             Int?
+  mistakes           Json?
+  notes              String?
+  lessons            String?
+  journalStatus      String         @default("INCOMPLETE") @map("journal_status")
+  ticket             String?
+  orderId            String?        @map("order_id")
+  dealId             String?        @map("deal_id")
+  magicNumber        Int?           @map("magic_number")
+  needsReconciliation Boolean       @default(false) @map("needs_reconciliation")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  checklistItems     TradeChecklistItem[]
+  tags               TradeTag[]
+  screenshots        Screenshot[]
+
+  @@index([accountId, openedAt])
+  @@index([accountId, positionId])
+  @@map("journal_trades")
+}
+
+model ChecklistTemplate {
+  id        String          @id @default(uuid())
+  userId    String          @map("user_id")
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isDefault Boolean         @default(false) @map("is_default")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  items     ChecklistItem[]
+
+  @@map("checklist_templates")
+}
+
+model ChecklistItem {
+  id         String            @id @default(uuid())
+  templateId String            @map("template_id")
+  template   ChecklistTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  label      String
+  sortOrder  Int               @map("sort_order")
+  active     Boolean           @default(true)
+
+  @@map("checklist_items")
+}
+
+model TradeChecklistItem {
+  id        String       @id @default(uuid())
+  tradeId   String       @map("trade_id")
+  trade     JournalTrade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  label     String
+  checked   Boolean      @default(false)
+  checkedAt DateTime?    @map("checked_at")
+
+  @@map("trade_checklist_items")
+}
+
+model Strategy {
+  id          String         @id @default(uuid())
+  userId      String         @map("user_id")
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  color       String         @default("#1677FF")
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  trades      JournalTrade[]
+
+  @@unique([userId, name])
+  @@map("strategies")
+}
+
+model Tag {
+  id        String     @id @default(uuid())
+  userId    String     @map("user_id")
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime   @default(now()) @map("created_at")
+  trades    TradeTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model TradeTag {
+  tradeId String       @map("trade_id")
+  tagId   String       @map("tag_id")
+  trade   JournalTrade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  tag     Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([tradeId, tagId])
+  @@map("trade_tags")
+}
+
+model Screenshot {
+  id         String       @id @default(uuid())
+  tradeId    String       @map("trade_id")
+  trade      JournalTrade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  type       String
+  storageKey String       @map("storage_key")
+  url        String
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@map("screenshots")
+}
