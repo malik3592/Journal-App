@@ -245,6 +245,8 @@ class Trade {
     this.riskFree = false,
     this.marketConditions = const [],
     this.mistakes = const [],
+    this.entryReasons = const [],
+    this.exitReasons = const [],
     this.checklist = const [],
     this.screenshots = const [],
   });
@@ -282,6 +284,8 @@ class Trade {
   final String result;
   final List<String> marketConditions;
   final List<String> mistakes;
+  final List<String> entryReasons;
+  final List<String> exitReasons;
   final List<ChecklistEntry> checklist;
   final List<String> screenshots;
 
@@ -332,6 +336,8 @@ class Trade {
         result: json['result'] as String? ?? 'OPEN',
         marketConditions: _stringList(json['marketConditions']),
         mistakes: _stringList(json['mistakes']),
+        entryReasons: _stringList(json['entryReasons']),
+        exitReasons: _stringList(json['exitReasons']),
         checklist: (json['checklist'] as List<dynamic>? ?? [])
             .map((e) => ChecklistEntry.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -372,6 +378,8 @@ class Trade {
         'result': result,
         'marketConditions': marketConditions,
         'mistakes': mistakes,
+        'entryReasons': entryReasons,
+        'exitReasons': exitReasons,
         'checklist': checklist.map((e) => e.toJson()).toList(),
         'screenshots': screenshots,
       };

@@ -240,22 +240,55 @@ class TradeDetailScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => context.push('/trade/${trade.id}/journal'),
-              child: Text(
-                trade.journalStatus == 'COMPLETE'
-                    ? 'Update journal'
-                    : 'Complete journal',
-              ),
-            ),
-            if (trade.journalStatus == 'COMPLETE') ...[
-              const SizedBox(height: 12),
-              FilledButton.tonal(
-                onPressed: () => context.push('/trade/${trade.id}/analysis'),
-                child: const Text('Analyze trade'),
+            if (trade.entryReasons.isNotEmpty ||
+                trade.exitReasons.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'JOURNAL',
+                      style: TextStyle(color: AppColors.secondary, fontSize: 12),
+                    ),
+                    if (trade.entryReasons.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Entry reasons',
+                        style: TextStyle(color: AppColors.secondary),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final item in trade.entryReasons)
+                            StatusChip(label: item),
+                        ],
+                      ),
+                    ],
+                    if (trade.exitReasons.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Exit reasons',
+                        style: TextStyle(color: AppColors.secondary),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final item in trade.exitReasons)
+                            StatusChip(label: item),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
+            const SizedBox(height: 16),
+            _TradeDetailActions(trade: trade),
           ],
         ),
       ),
@@ -283,6 +316,62 @@ class TradeDetailScreen extends ConsumerWidget {
   }
 }
 
+class _TradeDetailActions extends StatelessWidget {
+  const _TradeDetailActions({required this.trade});
+  final Trade trade;
+
+  static final _secondaryStyle = OutlinedButton.styleFrom(
+    minimumSize: const Size.fromHeight(52),
+    foregroundColor: AppColors.text,
+    side: const BorderSide(color: AppColors.border),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = trade.journalStatus == 'COMPLETE';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (complete) ...[
+          const Row(
+            children: [
+              Icon(Icons.check_circle, size: 16, color: AppColors.positive),
+              SizedBox(width: 6),
+              Text(
+                'Journal complete',
+                style: TextStyle(
+                  color: AppColors.positive,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () => context.push('/trade/${trade.id}/analysis'),
+            icon: const Icon(Icons.insights_outlined),
+            label: const Text('Analyze trade'),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => context.push('/trade/${trade.id}/journal'),
+            style: _secondaryStyle,
+            icon: const Icon(Icons.edit_note_outlined),
+            label: const Text('Update journal'),
+          ),
+        ] else
+          FilledButton.icon(
+            onPressed: () => context.push('/trade/${trade.id}/journal'),
+            icon: const Icon(Icons.assignment_outlined),
+            label: const Text('Complete journal'),
+          ),
+      ],
+    );
+  }
+}
+
 class JournalScreen extends ConsumerStatefulWidget {
   const JournalScreen({super.key, required this.tradeId});
   final String tradeId;
@@ -302,6 +391,8 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   int rating = 5;
   final selectedConditions = <String>{};
   final selectedMistakes = <String>{};
+  final selectedEntryReasons = <String>{};
+  final selectedExitReasons = <String>{};
   final screenshots = <String>[];
   late List<ChecklistEntry> checklist;
   String? timeframe;
@@ -322,6 +413,16 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     'Revenge',
     'Frustrated',
     'Overconfident',
+    'Patient',
+    'Impatient',
+    'Anxious',
+    'Doubtful',
+    'Excited',
+    'Bored',
+    'Stressed',
+    'Distracted',
+    'Disciplined',
+    'Impulsive',
   ];
   static const conditions = [
     'Trending',
@@ -329,6 +430,19 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     'Volatile',
     'Low Volatility',
     'News Driven',
+    'Strong Trend',
+    'Weak Trend',
+    'Breakout',
+    'Consolidation',
+    'Pullback',
+    'Reversal',
+    'Choppy',
+    'Liquidity Sweep',
+    'High Liquidity',
+    'Low Liquidity',
+    'Session Open',
+    'Pre-News',
+    'Post-News',
     'Unclear',
   ];
   static const mistakes = [
@@ -342,7 +456,52 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     'Ignored confirmation',
     'Broke strategy',
     'Overtraded',
+    'No Stop Loss',
+    'Risked Too Much',
+    'Poor Risk/Reward',
+    'Wrong Position Size',
+    'Chased Price',
+    'Entered Without Setup',
+    'Ignored Market Context',
+    'Ignored Trend',
+    'Traded Against Trend',
+    'Entered During News',
+    'Ignored Spread',
+    'Ignored Liquidity',
+    'Duplicate Entry',
+    'Too Many Entries',
+    'Partial Exit Too Early',
+    'Did Not Take Planned Profit',
+    'Closed Trade Emotionally',
+    'Did Not Follow Trading Session',
     'None',
+  ];
+  static const entryReasons = [
+    'Breakout',
+    'Pullback',
+    'Retest',
+    'Support/Resistance',
+    'Trend Continuation',
+    'Trend Reversal',
+    'Liquidity Sweep',
+    'Price Action',
+    'Indicator Confirmation',
+    'News/Event',
+    'Other',
+  ];
+  static const exitReasons = [
+    'Take Profit Hit',
+    'Stop Loss Hit',
+    'Manual Profit',
+    'Manual Loss',
+    'Trailing Stop',
+    'Moved Stop',
+    'Moved Take Profit',
+    'Fear',
+    'Greed',
+    'News',
+    'Market Reversal',
+    'Other',
   ];
   static const otherLabel = 'Other';
   static const timeframes = [
@@ -357,15 +516,15 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     '1M',
   ];
   static const preTradeOptions = [
-    'Trading level',
+    'QML',
+    'Inter Level 4 A+',
     'JTL1',
     'JTL2',
+    'Inter Level 3',
     'SBR',
     'RBS',
     'Double Bottom',
     'Double Top',
-    'Inter Level 3',
-    'Inter Level 4 A+',
     'FIB',
     'Clear higher-timeframe bias',
     'At key support / resistance',
@@ -376,6 +535,27 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     otherLabel,
   ];
   static const postTradeOptions = [
+    'Perfect Execution',
+    'Good Entry',
+    'Poor Entry',
+    'Good Exit',
+    'Poor Exit',
+    'Risk Was Well Managed',
+    'Risk Was Too High',
+    'Trade Was Too Large',
+    'Exited Due to Emotion',
+    'Exited Due to Fear',
+    'Exited Due to Greed',
+    'Missed the Setup',
+    'Should Have Waited',
+    'Followed Confirmation',
+    'Ignored Confirmation',
+    'Market Changed',
+    'News Affected Trade',
+    'Spread Affected Trade',
+    'Setup Worked as Expected',
+    'Setup Failed',
+    'Trade Was Unnecessary',
     'Followed the plan',
     'Good execution',
     'Cut winner too early',
@@ -454,6 +634,8 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     rating = trade.rating ?? 5;
     selectedConditions.addAll(trade.marketConditions);
     selectedMistakes.addAll(trade.mistakes);
+    selectedEntryReasons.addAll(trade.entryReasons);
+    selectedExitReasons.addAll(trade.exitReasons);
     screenshots
       ..clear()
       ..addAll(trade.screenshots);
@@ -493,6 +675,8 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     'rating': rating,
     'marketConditions': selectedConditions.toList(),
     'mistakes': selectedMistakes.toList(),
+    'entryReasons': selectedEntryReasons.toList(),
+    'exitReasons': selectedExitReasons.toList(),
     'checklist': checklist.map((e) => e.toJson()).toList(),
     'screenshots': screenshots,
   };
@@ -690,6 +874,27 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
               ),
               const SizedBox(height: 16),
               _JournalSection(
+                title: 'Entry reasons',
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final item in entryReasons)
+                      FilterChip(
+                        label: Text(item),
+                        selected: selectedEntryReasons.contains(item),
+                        onSelected: (v) => setState(() {
+                          message = null;
+                          v
+                              ? selectedEntryReasons.add(item)
+                              : selectedEntryReasons.remove(item);
+                        }),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _JournalSection(
                 title: 'Post-trade review',
                 child: _SelectOrOther(
                   value: postChoice,
@@ -701,6 +906,27 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                     message = null;
                     postChoice = value;
                   }),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _JournalSection(
+                title: 'Exit reasons',
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final item in exitReasons)
+                      FilterChip(
+                        label: Text(item),
+                        selected: selectedExitReasons.contains(item),
+                        onSelected: (v) => setState(() {
+                          message = null;
+                          v
+                              ? selectedExitReasons.add(item)
+                              : selectedExitReasons.remove(item);
+                        }),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),

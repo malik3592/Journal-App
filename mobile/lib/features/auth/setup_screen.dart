@@ -76,6 +76,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       }
       return;
     }
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       error = null;
       step = 1;
@@ -156,6 +157,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     _prime();
     final lock = ref.watch(lockProvider);
     return Scaffold(
+      resizeToAvoidBottomInset: step == 0,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -240,7 +242,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     required String value,
     required ValueChanged<String> onChanged,
   }) {
-    return Column(
+    return _FitColumn(
       children: [
         Align(
           alignment: Alignment.centerLeft,
@@ -285,7 +287,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   Widget _biometricStep(AppLockState lock) {
-    return Column(
+    return _FitColumn(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
@@ -324,6 +326,35 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           child: const Text('Choose a different PIN'),
         ),
       ],
+    );
+  }
+}
+
+class _FitColumn extends StatelessWidget {
+  const _FitColumn({
+    required this.children,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+  });
+
+  final List<Widget> children;
+  final CrossAxisAlignment crossAxisAlignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: crossAxisAlignment,
+                children: children,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

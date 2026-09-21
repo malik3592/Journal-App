@@ -138,7 +138,7 @@ class DriveBackupService {
   String _driveError(Object error) {
     final text = error.toString();
     if (text.contains('sign_in_failed') || text.contains('ApiException: 10')) {
-      return 'Google sign-in is not configured for this app. Add OAuth client IDs in Google Cloud for package com.journal.journal.';
+      return 'Google sign-in is not configured for this app. Add OAuth client IDs in Google Cloud for package com.trading.journal.';
     }
     if (text.contains('network_error') || text.contains('SocketException')) {
       return 'Could not reach Google Drive. Check your internet connection.';

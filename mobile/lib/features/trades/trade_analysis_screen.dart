@@ -228,6 +228,44 @@ class TradeAnalysisScreen extends ConsumerWidget {
                         ],
                         const SizedBox(height: 12),
                       ],
+                      if (trade.entryReasons.isNotEmpty) ...[
+                        const Text(
+                          'Entry reasons',
+                          style: TextStyle(
+                            color: AppColors.secondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final item in trade.entryReasons)
+                              StatusChip(label: item),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      if (trade.exitReasons.isNotEmpty) ...[
+                        const Text(
+                          'Exit reasons',
+                          style: TextStyle(
+                            color: AppColors.secondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final item in trade.exitReasons)
+                              StatusChip(label: item),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       const Text(
                         'Rating',
                         style: TextStyle(

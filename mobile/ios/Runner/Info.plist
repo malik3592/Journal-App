@@ -82,7 +82,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.journal.journal</string>
+				<string>com.trading.journal</string>
 			</array>
 		</dict>
 	</array>

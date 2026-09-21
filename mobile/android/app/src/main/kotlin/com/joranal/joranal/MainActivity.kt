@@ -1,4 +1,4 @@
-package com.journal.journal
+package com.trading.journal
 
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts

@@ -66,49 +66,65 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final lock = ref.watch(lockProvider);
     final name = ref.watch(journalProvider).profile.displayName;
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              const Icon(Icons.show_chart, color: AppColors.gold, size: 44),
-              const SizedBox(height: 16),
-              Text(
-                'Welcome back${name.isEmpty ? '' : ', $name'}',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Enter your PIN to open the journal',
-                style: TextStyle(color: AppColors.secondary),
-              ),
-              const Spacer(),
-              PinPad(
-                value: pin,
-                onChanged: _onPin,
-                enabled: !lock.busy && !lock.isLockedOut,
-                error: error,
-              ),
-              if (lock.canUseBiometrics) ...[
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: lock.busy
-                      ? null
-                      : () => _tryBiometrics(manual: true),
-                  icon: Icon(
-                    lock.biometric == DeviceBiometric.faceId
-                        ? Icons.face
-                        : Icons.fingerprint,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 24),
+                        const Icon(
+                          Icons.show_chart,
+                          color: AppColors.gold,
+                          size: 44,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Welcome back${name.isEmpty ? '' : ', $name'}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Enter your PIN to open the journal',
+                          style: TextStyle(color: AppColors.secondary),
+                        ),
+                        const Spacer(),
+                        PinPad(
+                          value: pin,
+                          onChanged: _onPin,
+                          enabled: !lock.busy && !lock.isLockedOut,
+                          error: error,
+                        ),
+                        if (lock.canUseBiometrics) ...[
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: lock.busy
+                                ? null
+                                : () => _tryBiometrics(manual: true),
+                            icon: Icon(
+                              lock.biometric == DeviceBiometric.faceId
+                                  ? Icons.face
+                                  : Icons.fingerprint,
+                            ),
+                            label: Text(lock.biometric.unlockLabel),
+                          ),
+                        ],
+                        const Spacer(),
+                      ],
+                    ),
                   ),
-                  label: Text(lock.biometric.unlockLabel),
                 ),
-              ],
-              const Spacer(),
-            ],
+              );
+            },
           ),
         ),
       ),

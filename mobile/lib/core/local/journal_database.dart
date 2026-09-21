@@ -322,6 +322,12 @@ Trade buildManualTrade({
     mistakes: body['mistakes'] is List
         ? (body['mistakes'] as List).map((e) => e.toString()).toList()
         : existing?.mistakes ?? const [],
+    entryReasons: body['entryReasons'] is List
+        ? (body['entryReasons'] as List).map((e) => e.toString()).toList()
+        : existing?.entryReasons ?? const [],
+    exitReasons: body['exitReasons'] is List
+        ? (body['exitReasons'] as List).map((e) => e.toString()).toList()
+        : existing?.exitReasons ?? const [],
     checklist: checklist,
     screenshots: body['screenshots'] is List
         ? (body['screenshots'] as List).map((e) => e.toString()).toList()
