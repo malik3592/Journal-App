@@ -314,7 +314,10 @@ Trade buildManualTrade({
     rating: body['rating'] as int? ?? existing?.rating,
     ticket: existing?.ticket,
     riskFree: riskFree,
-    journalStatus: complete ? 'COMPLETE' : 'INCOMPLETE',
+    journalStatus:
+        body['journalStatus'] as String? ??
+        (complete ? 'COMPLETE' : existing?.journalStatus) ??
+        'INCOMPLETE',
     result: tradeResult(closedAt: closedAt, netProfit: net, riskFree: riskFree),
     marketConditions: body['marketConditions'] is List
         ? (body['marketConditions'] as List).map((e) => e.toString()).toList()

@@ -240,53 +240,6 @@ class TradeDetailScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            if (trade.entryReasons.isNotEmpty ||
-                trade.exitReasons.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              AppCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'JOURNAL',
-                      style: TextStyle(color: AppColors.secondary, fontSize: 12),
-                    ),
-                    if (trade.entryReasons.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Entry reasons',
-                        style: TextStyle(color: AppColors.secondary),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final item in trade.entryReasons)
-                            StatusChip(label: item),
-                        ],
-                      ),
-                    ],
-                    if (trade.exitReasons.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Exit reasons',
-                        style: TextStyle(color: AppColors.secondary),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final item in trade.exitReasons)
-                            StatusChip(label: item),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: 16),
             _TradeDetailActions(trade: trade),
           ],
@@ -679,6 +632,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     'exitReasons': selectedExitReasons.toList(),
     'checklist': checklist.map((e) => e.toJson()).toList(),
     'screenshots': screenshots,
+    'journalStatus': 'COMPLETE',
   };
 
   Future<void> _save() async {
